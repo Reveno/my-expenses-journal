@@ -63,7 +63,8 @@ logging.basicConfig(format="%(asctime)s | %(levelname)s | %(message)s", level=lo
  SETTINGS_MENU,
  ONBOARD_LANG, ONBOARD_CUR_PRI, ONBOARD_CUR_SEC,
  FEEDBACK_MSG,
- INCOME_AMT, INCOME_SRC) = range(36)
+ INCOME_AMT, INCOME_SRC,
+ FINANCE_MENU, REPORTS_MENU, MORE_MENU) = range(39)
 
 # ── Валюти ─────────────────────────────────────────────────────────────────────
 CURRENCY_SYMBOLS = {"UAH": "₴", "USD": "$", "EUR": "€", "GBP": "£", "PLN": "zł"}
@@ -140,6 +141,12 @@ T = {
         "📊 <b>Excel звіт</b>\nВивантаж всі дані у таблицю.\n\n"
         "⚙️ <b>Категорії</b>\nДодай свої власні категорії.\n\n"
         "💬 <b>Зворотній зв\'язок</b>\nПишіть пропозиції або питання — відповімо!",
+    "btn_finance":"💰 Фінанси","btn_reports":"📊 Звіти","btn_more":"⚙️ Більше",
+    "btn_back":"⬅️ Назад",
+    "btn_add_income_short":"➕ Додати дохід",
+    "finance_title":"💰 <b>Фінанси за {month}</b>",
+    "finance_no_income":"📈 Доходів не записано",
+    "finance_add_income_hint":"Натисни «➕ Додати дохід» щоб записати надходження.",
     "btn_settings":"⚙️ Налаштування",
     "btn_feedback":"💬 Зворотній зв'язок",
     "feedback_cooldown":"⏳ Ти вже надсилав повідомлення нещодавно. Спробуй через годину.",
@@ -274,6 +281,12 @@ T = {
         "📊 <b>Excel отчёт</b>\nВыгрузи все данные в таблицу.\n\n"
         "⚙️ <b>Категории</b>\nДобавь свои собственные категории.\n\n"
         "💬 <b>Обратная связь</b>\nПишите предложения или вопросы — ответим!",
+    "btn_finance":"💰 Финансы","btn_reports":"📊 Отчёты","btn_more":"⚙️ Ещё",
+    "btn_back":"⬅️ Назад",
+    "btn_add_income_short":"➕ Добавить доход",
+    "finance_title":"💰 <b>Финансы за {month}</b>",
+    "finance_no_income":"📈 Доходов не записано",
+    "finance_add_income_hint":"Нажми «➕ Добавить доход» чтобы записать поступления.",
     "btn_settings":"⚙️ Настройки",
     "btn_feedback":"💬 Обратная связь",
     "feedback_cooldown":"⏳ Ты уже отправлял сообщение недавно. Попробуй через час.",
@@ -408,6 +421,12 @@ T = {
         "📊 <b>Excel report</b>\nExport all data to a spreadsheet.\n\n"
         "⚙️ <b>Categories</b>\nAdd your own custom categories.\n\n"
         "💬 <b>Feedback</b>\nSend suggestions or questions — we\'ll reply!",
+    "btn_finance":"💰 Finances","btn_reports":"📊 Reports","btn_more":"⚙️ More",
+    "btn_back":"⬅️ Back",
+    "btn_add_income_short":"➕ Add income",
+    "finance_title":"💰 <b>Finances for {month}</b>",
+    "finance_no_income":"📈 No income recorded",
+    "finance_add_income_hint":"Press «➕ Add income» to record your earnings.",
     "btn_settings":"⚙️ Settings",
     "btn_feedback":"💬 Feedback",
     "feedback_cooldown":"⏳ You already sent a message recently. Try again in an hour.",
@@ -541,6 +560,12 @@ T = {
         "📊 <b>Excel-Bericht</b>\nAlle Daten als Tabelle exportieren.\n\n"
         "⚙️ <b>Kategorien</b>\nEigene Kategorien hinzufügen.\n\n"
         "💬 <b>Feedback</b>\nVorschläge oder Fragen — wir antworten!",
+    "btn_finance":"💰 Finanzen","btn_reports":"📊 Berichte","btn_more":"⚙️ Mehr",
+    "btn_back":"⬅️ Zurück",
+    "btn_add_income_short":"➕ Einnahmen hinzufügen",
+    "finance_title":"💰 <b>Finanzen für {month}</b>",
+    "finance_no_income":"📈 Keine Einnahmen erfasst",
+    "finance_add_income_hint":"Drücke «➕ Einnahmen hinzufügen» um Einnahmen zu erfassen.",
     "btn_settings":"⚙️ Einstellungen",
     "btn_feedback":"💬 Feedback",
     "feedback_cooldown":"⏳ Du hast kürzlich eine Nachricht gesendet. Versuche es in einer Stunde.",
@@ -1017,16 +1042,35 @@ def main_kb(uid: int, s: dict | None = None) -> ReplyKeyboardMarkup:
     g = lambda k: tr(uid, k, s)
     return ReplyKeyboardMarkup([
         [g("btn_add"),      g("btn_quick")],
-        [g("btn_income"),   g("btn_balance")],
-        [g("btn_today"),    g("btn_week"),    g("btn_month")],
+        [g("btn_finance"),  g("btn_reports")],
+        [g("btn_more"),     g("btn_settings")],
+    ], resize_keyboard=True)
+
+def finance_kb(uid: int, s: dict | None = None) -> ReplyKeyboardMarkup:
+    g = lambda k: tr(uid, k, s)
+    return ReplyKeyboardMarkup([
+        [g("btn_add_income_short")],
+        [g("btn_back")],
+    ], resize_keyboard=True)
+
+def reports_kb(uid: int, s: dict | None = None) -> ReplyKeyboardMarkup:
+    g = lambda k: tr(uid, k, s)
+    return ReplyKeyboardMarkup([
+        [g("btn_today"),    g("btn_week")],
+        [g("btn_month"),    g("btn_compare")],
         [g("btn_top_cat"),  g("btn_top_items")],
-        [g("btn_limit"),    g("btn_delete")],
-        [g("btn_convert"),  g("btn_export")],
-        [g("btn_recurring"),g("btn_reminders")],
-        [g("btn_compare")],
-        [g("btn_my_cats")],
-        [g("btn_help")],
-        [g("btn_settings"), g("btn_feedback")],
+        [g("btn_export")],
+        [g("btn_back")],
+    ], resize_keyboard=True)
+
+def more_kb(uid: int, s: dict | None = None) -> ReplyKeyboardMarkup:
+    g = lambda k: tr(uid, k, s)
+    return ReplyKeyboardMarkup([
+        [g("btn_limit"),    g("btn_recurring")],
+        [g("btn_reminders"),g("btn_convert")],
+        [g("btn_my_cats"),  g("btn_help")],
+        [g("btn_feedback")],
+        [g("btn_back")],
     ], resize_keyboard=True)
 
 def cat_kb(uid: int, s: dict) -> ReplyKeyboardMarkup:
@@ -2176,9 +2220,11 @@ async def income_got_source(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
     amount = ctx.user_data["inc_amt"]
     add_income(uid, amount, source)
+    after = ctx.user_data.pop("after_income", None)
+    kb = finance_kb(uid, s) if after == "finance" else main_kb(uid, s)
     await update.message.reply_text(
         tr(uid, "income_saved", s, source=source, amount=amount, sym=sym(s)),
-        parse_mode="HTML", reply_markup=main_kb(uid, s)
+        parse_mode="HTML", reply_markup=kb
     )
     return ConversationHandler.END
 
@@ -2231,6 +2277,135 @@ async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         reply_markup=main_kb(uid, s),
         disable_web_page_preview=True
     )
+
+
+# ── Фінанси (підменю) ─────────────────────────────────────────────────────────
+async def finance_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    if not _is_allowed(uid): return ConversationHandler.END
+    s    = get_settings(uid)
+    lang = s["language"]
+    _sym = sym(s)
+    now  = datetime.now()
+
+    MONTHS_SHORT = {
+        "uk":["","Січ","Лют","Бер","Кві","Тра","Чер","Лип","Сер","Вер","Жов","Лис","Гру"],
+        "ru":["","Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"],
+        "en":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+        "de":["","Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"],
+    }
+    month_name = f"{MONTHS_SHORT[lang][now.month]} {now.year}"
+
+    income_total   = get_month_income(uid)
+    expenses_total = get_month_expenses_total(uid)
+    balance        = income_total - expenses_total
+
+    lines = [tr(uid, "finance_title", s, month=month_name), ""]
+    if income_total > 0:
+        lines.append(tr(uid, "balance_income",   s, amount=income_total,   sym=_sym))
+    else:
+        lines.append(tr(uid, "finance_no_income", s))
+    lines.append(tr(uid, "balance_expenses", s, amount=expenses_total, sym=_sym))
+    if income_total > 0:
+        lines.append("")
+        lines.append(tr(uid, "balance_result_pos" if balance >= 0 else "balance_result_neg",
+                       s, amount=abs(balance), sym=_sym))
+    lines.append("")
+    lines.append(tr(uid, "finance_add_income_hint", s))
+
+    await update.message.reply_text(
+        "\n".join(lines), parse_mode="HTML",
+        reply_markup=finance_kb(uid, s)
+    )
+    return FINANCE_MENU
+
+async def finance_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    uid  = update.effective_user.id
+    s    = get_settings(uid)
+    text = sanitize(update.message.text)
+    if text == tr(uid, "btn_back", s):
+        await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
+        return ConversationHandler.END
+    if text == tr(uid, "btn_add_income_short", s):
+        await update.message.reply_text(
+            tr(uid, "income_enter_amount", s, sym=sym(s)),
+            parse_mode="HTML", reply_markup=cancel_kb(uid, s)
+        )
+        ctx.user_data["after_income"] = "finance"
+        return INCOME_AMT
+    return FINANCE_MENU
+
+
+# ── Звіти (підменю) ───────────────────────────────────────────────────────────
+async def reports_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    if not _is_allowed(uid): return ConversationHandler.END
+    s = get_settings(uid)
+    await update.message.reply_text(
+        tr(uid, "choose_menu", s), reply_markup=reports_kb(uid, s)
+    )
+    return REPORTS_MENU
+
+async def reports_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    uid  = update.effective_user.id
+    s    = get_settings(uid)
+    text = sanitize(update.message.text)
+
+    if text == tr(uid, "btn_back", s):
+        await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
+        return ConversationHandler.END
+
+    # Route to existing handlers
+    for lang in T:
+        if text == T[lang]["btn_today"]:   await summary_day(update, ctx);   return REPORTS_MENU
+        if text == T[lang]["btn_week"]:    await summary_week(update, ctx);  return REPORTS_MENU
+        if text == T[lang]["btn_month"]:   await summary_month(update, ctx); return REPORTS_MENU
+        if text == T[lang]["btn_compare"]: await compare_months(update, ctx);return REPORTS_MENU
+        if text == T[lang]["btn_top_cat"]: await top_categories(update, ctx);return REPORTS_MENU
+        if text == T[lang]["btn_top_items"]:await top_items(update, ctx);    return REPORTS_MENU
+
+    # Excel — starts its own conv, so just trigger it
+    if any(text == T[l]["btn_export"] for l in T):
+        await export_start(update, ctx)
+        return ConversationHandler.END
+
+    return REPORTS_MENU
+
+
+# ── Більше (підменю) ──────────────────────────────────────────────────────────
+async def more_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    if not _is_allowed(uid): return ConversationHandler.END
+    s = get_settings(uid)
+    await update.message.reply_text(
+        tr(uid, "choose_menu", s), reply_markup=more_kb(uid, s)
+    )
+    return MORE_MENU
+
+async def more_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    uid  = update.effective_user.id
+    s    = get_settings(uid)
+    text = sanitize(update.message.text)
+
+    if text == tr(uid, "btn_back", s):
+        await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
+        return ConversationHandler.END
+    if text == tr(uid, "btn_help", s):
+        await show_help(update, ctx); return MORE_MENU
+    if text == tr(uid, "btn_feedback", s):
+        await feedback_start(update, ctx); return ConversationHandler.END
+    if text == tr(uid, "btn_convert", s):
+        await convert_start(update, ctx); return ConversationHandler.END
+    if text == tr(uid, "btn_limit", s):
+        await limit_start(update, ctx); return ConversationHandler.END
+    if text == tr(uid, "btn_recurring", s):
+        await recur_start(update, ctx); return ConversationHandler.END
+    if text == tr(uid, "btn_reminders", s):
+        await remind_start(update, ctx); return ConversationHandler.END
+    if text == tr(uid, "btn_my_cats", s):
+        await ccat_start(update, ctx); return ConversationHandler.END
+
+    return MORE_MENU
 
 # ── Порівняння місяців ────────────────────────────────────────────────────────
 async def compare_months(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -2770,6 +2945,23 @@ def main():
             states={
                 INCOME_AMT: [MessageHandler(filters.TEXT & ~filters.COMMAND, income_got_amount)],
                 INCOME_SRC: [MessageHandler(filters.TEXT & ~filters.COMMAND, income_got_source)],
+            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)]),
+        ConversationHandler(
+            entry_points=[MessageHandler(filters.Regex(make_pat("btn_finance")), finance_menu)],
+            states={
+                FINANCE_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, finance_action)],
+                INCOME_AMT:   [MessageHandler(filters.TEXT & ~filters.COMMAND, income_got_amount)],
+                INCOME_SRC:   [MessageHandler(filters.TEXT & ~filters.COMMAND, income_got_source)],
+            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)]),
+        ConversationHandler(
+            entry_points=[MessageHandler(filters.Regex(make_pat("btn_reports")), reports_menu)],
+            states={
+                REPORTS_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, reports_action)],
+            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)]),
+        ConversationHandler(
+            entry_points=[MessageHandler(filters.Regex(make_pat("btn_more")), more_menu)],
+            states={
+                MORE_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, more_action)],
             }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)]),
     ]
 
