@@ -1616,15 +1616,7 @@ async def export_do(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     uid, text = update.effective_user.id, update.message.text
     s = get_settings(uid)
 
-    # Вихід якщо натиснута будь-яка кнопка головного меню
-    _all_btns = {T[_l][_k] for _l in T for _k in T[_l]}
-    if text in _all_btns and text != tr(uid, "btn_cancel", s):
-        await menu_router(update, ctx)
-        return ConversationHandler.END
-    if text == tr(uid, "btn_cancel", s):
-        await update.message.reply_text(tr(uid, "cancelled", s), reply_markup=main_kb(uid, s))
-        return ConversationHandler.END
-
+    # Перевіряємо export-кнопки ПЕРШИМИ — до будь-якого escape
     period_map = {
         tr(uid, "export_btn_today", s): "day",
         tr(uid, "export_btn_week", s):  "week",
@@ -1632,7 +1624,18 @@ async def export_do(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         tr(uid, "export_btn_all", s):   "all",
     }
     period = period_map.get(text)
+
+    if text == tr(uid, "btn_cancel", s):
+        await update.message.reply_text(tr(uid, "cancelled", s), reply_markup=main_kb(uid, s))
+        return ConversationHandler.END
+
     if not period:
+        # Тільки тепер перевіряємо чи це кнопка головного меню
+        _main_btns = {T[_l][_k] for _l in T for _k in T[_l]
+                      if _k.startswith("btn_") and not _k.startswith("btn_export")}
+        if text in _main_btns:
+            await menu_router(update, ctx)
+            return ConversationHandler.END
         await update.message.reply_text(tr(uid, "export_period", s), reply_markup=export_kb(uid, s))
         return EXPORT_PERIOD
 
