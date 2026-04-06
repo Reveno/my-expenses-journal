@@ -1,62 +1,61 @@
-# 💰 My Expenses Journal Bot
+# My Expenses Journal Bot
 
-Telegram-бот для обліку витрат та доходів. Підтримує 4 мови (UK/RU/EN/DE).
+Telegram bot for personal expense and income tracking. Supports 4 languages (uk/ru/en/de).
 
-## Функції
-- ➕ Додавання витрат за категоріями
-- 📈 Облік доходів + 💰 Баланс (дохід − витрати)
-- ⚡ Шаблони для частих витрат
-- 📅📆🗓 Звіти по днях/тижнях/місяцях
-- ⚠️ Ліміти з попередженнями (80% і 100%)
-- 🔁 Регулярні витрати (авто-запис по даті)
-- 🔔 Нагадування (неактивність, щоденні, тижневі)
-- 📊 Порівняння місяць/місяць
-- 🔄 Конвертер валют (160+ валют)
-- 📊 Excel-звіт (3 листи)
-- ⚙️ Власні категорії
-- 💬 Зворотній зв'язок з відповідями
-- 📖 Вбудована інструкція
+## Project structure
 
-## Деплой на Railway (рекомендовано)
-
-### 1. Підготовка
-```bash
-git init
-git add bot.py requirements.txt .gitignore README.md .env.example
-git commit -m "Initial release"
-git remote add origin https://github.com/YOUR_USERNAME/my-expenses-journal.git
-git push -u origin main
+```
+config.py       — constants, env vars, conversation states
+db.py           — database layer (PostgreSQL on Railway, SQLite locally)
+i18n.py         — translations loaded from locales/*.json
+currency.py     — exchange rates (open.er-api.com, cached 1h)
+security.py     — input sanitisation and user whitelist
+keyboards.py    — all keyboard builders
+excel.py        — Excel report (3 sheets)
+scheduler.py    — recurring expenses + reminder jobs
+main.py         — entry point
+handlers/
+  core.py       — /start, onboarding, add expense, reports
+  menus.py      — Finance / Reports / More submenus
+  templates.py  — quick templates
+  settings.py   — language, currency, help, donate
+  limits.py     — spending limits
+  categories.py — custom categories
+  converter.py  — currency converter
+  export.py     — Excel export
+  recurring.py  — recurring expenses
+  reminders.py  — reminder settings
+  feedback.py   — user feedback + admin /reply
+locales/        — uk.json, ru.json, en.json, de.json
 ```
 
-### 2. Railway
-1. railway.app → New Project → Deploy from GitHub repo
-2. `+ New` → Database → **Add PostgreSQL** (Railway сам додасть `DATABASE_URL`)
-3. Settings → Variables → додай:
+## Local setup
 
-| Змінна | Значення |
-|--------|----------|
-| `BOT_TOKEN` | токен від @BotFather |
-| `ADMIN_ID` | твій Telegram ID (@userinfobot) |
-| `DONATE_URL` | посилання для донатів |
-
-### 3. Готово
-Railway автоматично запустить бота при кожному `git push`.
-
-## Локальний запуск
 ```bash
 pip install -r requirements.txt
-# заповни .env (скопіюй з .env.example)
-python bot.py
+cp .env.example .env   # fill in BOT_TOKEN and ADMIN_ID
+python main.py
 ```
 
-## Команди адміністратора
-- `/reply USER_ID текст` — відповісти на фідбек користувача
+SQLite is used automatically when DATABASE_URL is not set.
 
-## Змінні середовища
-| Змінна | Обов'язкова | Опис |
-|--------|-------------|------|
-| `BOT_TOKEN` | ✅ | Токен від @BotFather |
-| `DATABASE_URL` | ❌ | PostgreSQL (Railway). Без нього — SQLite |
-| `ADMIN_ID` | ❌ | Твій Telegram ID для фідбеку |
-| `DONATE_URL` | ❌ | Посилання для донатів |
-| `ALLOWED_USERS` | ❌ | Whitelist ID (порожньо = публічний) |
+## Deploy on Railway
+
+1. Push to GitHub (`.env` is excluded by `.gitignore`)
+2. Railway → New Project → Deploy from GitHub
+3. Add PostgreSQL plugin (`DATABASE_URL` is set automatically)
+4. Add variables: `BOT_TOKEN`, `ADMIN_ID`, `DONATE_URL`
+
+## Environment variables
+
+| Variable       | Required | Description                                  |
+|----------------|----------|----------------------------------------------|
+| `BOT_TOKEN`    | ✅       | Token from @BotFather                        |
+| `DATABASE_URL` | —        | PostgreSQL URL (Railway sets this auto)      |
+| `ADMIN_ID`     | —        | Your Telegram ID for receiving feedback      |
+| `DONATE_URL`   | —        | Donation link (PayPal, Monobank, etc.)       |
+| `ALLOWED_USERS`| —        | Comma-separated whitelist (empty = public)   |
+
+## Admin commands
+
+- `/reply USER_ID text` — reply to a feedback message
