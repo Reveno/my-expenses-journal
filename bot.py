@@ -703,7 +703,8 @@ async def get_rates() -> dict:
         _rates_cache.update({"rates_usd": rates, "updated": now})
     return _rates_cache["rates_usd"]
 
-def convert_amount(amount: float, from_cur: str, to_cur: str, rates_usd: dict) -> float | None:
+def convert_amount(amount, from_cur: str, to_cur: str, rates_usd: dict) -> float | None:
+    amount = float(amount)
     """Convert via USD as base. rates_usd = {code: per_usd}"""
     if from_cur == to_cur:
         return amount
@@ -711,7 +712,8 @@ def convert_amount(amount: float, from_cur: str, to_cur: str, rates_usd: dict) -
         return None
     return amount * rates_usd[to_cur] / rates_usd[from_cur]
 
-def secondary_str(amount: float, s: dict, rates_usd: dict) -> str:
+def secondary_str(amount, s: dict, rates_usd: dict) -> str:
+    amount = float(amount)
     primary   = s.get("primary_currency", "UAH")
     secondary = s.get("secondary_currency", "USD")
     if not secondary or secondary in ("none", primary):
@@ -1196,7 +1198,7 @@ def fmt_today(uid: int, rows, s: dict, rates: dict) -> str:
     title = tr(uid, "title_today", s)
     if not rows:
         return f"{title}\n\n{tr(uid, 'no_data', s)}"
-    total = sum(r["amount"] for r in rows)
+    total = sum(float(r["amount"]) for r in rows)
     _sym, sec = sym(s), secondary_str(total, s, rates)
     lines = [title, f"{tr(uid, 'total_label', s)}: <b>{total:.2f} {_sym}{sec}</b>\n"]
     by_cat: dict[str, float] = defaultdict(float)
@@ -1211,7 +1213,7 @@ def fmt_period(uid: int, rows, title_key: str, s: dict, rates: dict) -> str:
     if not rows:
         return f"{title}\n\n{tr(uid, 'no_data', s)}"
     lang, _sym = s["language"], sym(s)
-    total = sum(r["amount"] for r in rows)
+    total = sum(float(r["amount"]) for r in rows)
     sec = secondary_str(total, s, rates)
     lines = [title, f"{tr(uid, 'total_label', s)}: <b>{total:.2f} {_sym}{sec}</b>"]
     by_date: dict[str, dict] = defaultdict(lambda: defaultdict(float))
@@ -2448,8 +2450,8 @@ async def compare_months(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     cur_rows  = _rows(cur_start, now)
     prev_rows = _rows(prev_start, prev_end)
-    cur_total  = sum(r["amount"] for r in cur_rows)
-    prev_total = sum(r["amount"] for r in prev_rows)
+    cur_total  = sum(float(r["amount"]) for r in cur_rows)
+    prev_total = sum(float(r["amount"]) for r in prev_rows)
 
     if not cur_rows and not prev_rows:
         await update.message.reply_text(tr(uid,"compare_no_data",s), reply_markup=main_kb(uid,s))
@@ -2481,8 +2483,8 @@ async def compare_months(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     all_cats: set = set()
     cur_cat: dict[str,float] = defaultdict(float)
     prev_cat: dict[str,float] = defaultdict(float)
-    for r in cur_rows:  cur_cat[r["category"]] += r["amount"]; all_cats.add(r["category"])
-    for r in prev_rows: prev_cat[r["category"]] += r["amount"]; all_cats.add(r["category"])
+    for r in cur_rows:  cur_cat[r["category"]] += float(r["amount"]); all_cats.add(r["category"])
+    for r in prev_rows: prev_cat[r["category"]] += float(r["amount"]); all_cats.add(r["category"])
     if all_cats:
         lines.append(""); lines.append(f"<b>{tr(uid,'compare_by_cat',s)}</b>")
         for cat in sorted(all_cats, key=lambda c: -(cur_cat.get(c,0)+prev_cat.get(c,0))):
