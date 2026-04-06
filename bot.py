@@ -2847,6 +2847,11 @@ async def menu_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if text == T[lang].get("btn_balance"):  return await show_balance(update, ctx)
         if text == T[lang].get("btn_help"):     return await show_help(update, ctx)
         if text == T[lang].get("btn_settings"): return await settings_start(update, ctx)
+        if text == T[lang].get("btn_back"):
+            await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
+            return
+        if text == T[lang].get("btn_add"):      return await add_start(update, ctx)
+        if text == T[lang].get("btn_quick"):    return await tmpl_start(update, ctx)
     await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
 
 # ── Запуск ─────────────────────────────────────────────────────────────────────
