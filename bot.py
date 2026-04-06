@@ -1,9 +1,17 @@
 import asyncio, io, json, logging, re, os, time, random, string, sqlite3, urllib.request
 try:
-    import psycopg2, psycopg2.extras
+    import psycopg2
+    import psycopg2.extras
     PSYCOPG2_OK = True
-except ImportError:
+except ImportError as _pg_err:
     PSYCOPG2_OK = False
+    class _FakePg:
+        def __getattr__(self, name):
+            raise ImportError(
+                f"psycopg2 is required when DATABASE_URL is set. "
+                f"Run: pip install psycopg2-binary"
+            )
+    psycopg2 = _FakePg()
 from datetime import datetime, timedelta
 from collections import defaultdict
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
@@ -719,7 +727,7 @@ class _PgDB:
     """Wrapper for psycopg2 — PostgreSQL (Railway production)."""
     def __init__(self, conn):
         self._conn = conn
-        self._cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        self._cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)  # type: ignore
 
     def execute(self, sql: str, params=()):
         self._cur.execute(sql.replace("?", "%s"), params or ())
@@ -763,6 +771,11 @@ class _SqliteDB:
 
 def get_db():
     if USE_PG:
+        if not PSYCOPG2_OK or psycopg2 is None:
+            raise RuntimeError(
+                "DATABASE_URL is set but psycopg2 is not installed!\n"
+                "Add 'psycopg2-binary==2.9.9' to requirements.txt"
+            )
         conn = psycopg2.connect(DATABASE_URL)
         return _PgDB(conn)
     else:
