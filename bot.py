@@ -2368,17 +2368,23 @@ async def reports_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
         return ConversationHandler.END
 
-    # Route to existing handlers
+    # Route to existing handlers — show reports_kb after each report
+    handled = False
     for lang in T:
-        if text == T[lang]["btn_today"]:   await summary_day(update, ctx);   return REPORTS_MENU
-        if text == T[lang]["btn_week"]:    await summary_week(update, ctx);  return REPORTS_MENU
-        if text == T[lang]["btn_month"]:   await summary_month(update, ctx); return REPORTS_MENU
-        if text == T[lang]["btn_compare"]: await compare_months(update, ctx);return REPORTS_MENU
-        if text == T[lang]["btn_top_cat"]: await top_categories(update, ctx);return REPORTS_MENU
-        if text == T[lang]["btn_top_items"]:await top_items(update, ctx);    return REPORTS_MENU
+        if text == T[lang].get("btn_today"):   await summary_day(update, ctx);    handled = True; break
+        if text == T[lang].get("btn_week"):    await summary_week(update, ctx);   handled = True; break
+        if text == T[lang].get("btn_month"):   await summary_month(update, ctx);  handled = True; break
+        if text == T[lang].get("btn_compare"): await compare_months(update, ctx); handled = True; break
+        if text == T[lang].get("btn_top_cat"): await top_categories(update, ctx); handled = True; break
+        if text == T[lang].get("btn_top_items"):await top_items(update, ctx);     handled = True; break
 
-    # Excel — starts its own conv, so just trigger it
-    if any(text == T[l]["btn_export"] for l in T):
+    if handled:
+        # Re-show reports submenu after displaying the report
+        await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=reports_kb(uid, s))
+        return REPORTS_MENU
+
+    # Excel
+    if any(text == T[l].get("btn_export","") for l in T):
         await export_start(update, ctx)
         return ConversationHandler.END
 
