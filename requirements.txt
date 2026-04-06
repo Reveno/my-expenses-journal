@@ -1,4 +1,4 @@
-# v3
+# v3 - psycopg2 without version pin for Python 3.13 compatibility
 python-telegram-bot[job-queue,rate-limiter]==21.6
 psycopg2-binary
 openpyxl==3.1.5

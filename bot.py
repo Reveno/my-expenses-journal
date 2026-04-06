@@ -2336,10 +2336,10 @@ async def finance_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     uid  = update.effective_user.id
     s    = get_settings(uid)
     text = sanitize(update.message.text)
-    if text == tr(uid, "btn_back", s):
+    if any(text == T[l].get("btn_back","") for l in T):
         await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
         return ConversationHandler.END
-    if text == tr(uid, "btn_add_income_short", s):
+    if any(text == T[l].get("btn_add_income_short","") for l in T):
         await update.message.reply_text(
             tr(uid, "income_enter_amount", s, sym=sym(s)),
             parse_mode="HTML", reply_markup=cancel_kb(uid, s)
@@ -2364,7 +2364,7 @@ async def reports_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s    = get_settings(uid)
     text = sanitize(update.message.text)
 
-    if text == tr(uid, "btn_back", s):
+    if any(text == T[l].get("btn_back","") for l in T):
         await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
         return ConversationHandler.END
 
@@ -2400,7 +2400,7 @@ async def more_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s    = get_settings(uid)
     text = sanitize(update.message.text)
 
-    if text == tr(uid, "btn_back", s):
+    if any(text == T[l].get("btn_back","") for l in T):
         await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
         return ConversationHandler.END
     if text == tr(uid, "btn_help", s):
@@ -2977,17 +2977,20 @@ def main():
                 FINANCE_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, finance_action)],
                 INCOME_AMT:   [MessageHandler(filters.TEXT & ~filters.COMMAND, income_got_amount)],
                 INCOME_SRC:   [MessageHandler(filters.TEXT & ~filters.COMMAND, income_got_source)],
-            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)]),
+            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)],
+            allow_reentry=True),
         ConversationHandler(
             entry_points=[MessageHandler(filters.Regex(make_pat("btn_reports")), reports_menu)],
             states={
                 REPORTS_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, reports_action)],
-            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)]),
+            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)],
+            allow_reentry=True),
         ConversationHandler(
             entry_points=[MessageHandler(filters.Regex(make_pat("btn_more")), more_menu)],
             states={
                 MORE_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, more_action)],
-            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)]),
+            }, fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, _menu_escape), CommandHandler("cancel", cmd_start)],
+            allow_reentry=True),
     ]
 
     # Onboarding — handles /start and first-time setup flow
