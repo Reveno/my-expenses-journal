@@ -2833,13 +2833,20 @@ async def menu_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     uid, text = update.effective_user.id, update.message.text
     s = get_settings(uid)
     for lang in T:
-        if text == T[lang]["btn_today"]:     return await summary_day(update, ctx)
-        if text == T[lang]["btn_week"]:      return await summary_week(update, ctx)
-        if text == T[lang]["btn_month"]:     return await summary_month(update, ctx)
-        if text == T[lang]["btn_top_cat"]:   return await top_categories(update, ctx)
-        if text == T[lang]["btn_top_items"]: return await top_items(update, ctx)
-        if text == T[lang]["btn_delete"]:    return await delete_last(update, ctx)
-        if text == T[lang]["btn_donate"]:    return await cmd_donate(update, ctx)
+        if text == T[lang].get("btn_reports"):  return await reports_menu(update, ctx)
+        if text == T[lang].get("btn_more"):     return await more_menu(update, ctx)
+        if text == T[lang].get("btn_finance"):  return await finance_menu(update, ctx)
+        if text == T[lang].get("btn_today"):    return await summary_day(update, ctx)
+        if text == T[lang].get("btn_week"):     return await summary_week(update, ctx)
+        if text == T[lang].get("btn_month"):    return await summary_month(update, ctx)
+        if text == T[lang].get("btn_top_cat"):  return await top_categories(update, ctx)
+        if text == T[lang].get("btn_top_items"):return await top_items(update, ctx)
+        if text == T[lang].get("btn_delete"):   return await delete_last(update, ctx)
+        if text == T[lang].get("btn_donate"):   return await cmd_donate(update, ctx)
+        if text == T[lang].get("btn_compare"):  return await compare_months(update, ctx)
+        if text == T[lang].get("btn_balance"):  return await show_balance(update, ctx)
+        if text == T[lang].get("btn_help"):     return await show_help(update, ctx)
+        if text == T[lang].get("btn_settings"): return await settings_start(update, ctx)
     await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
 
 # ── Запуск ─────────────────────────────────────────────────────────────────────
