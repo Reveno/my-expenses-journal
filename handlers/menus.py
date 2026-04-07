@@ -83,10 +83,9 @@ async def income_got_amount(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s      = get_settings(uid)
     text   = sanitize(update.message.text)
     if text == tr(uid, "btn_cancel", s):
-        after = ctx.user_data.pop("after_income", None)
-        kb    = finance_kb(uid, s) if after == "finance" else main_kb(uid, s)
-        await update.message.reply_text(tr(uid, "cancelled", s), reply_markup=kb)
-        return ConversationHandler.END
+        ctx.user_data.pop("after_income", None)
+        await update.message.reply_text(tr(uid, "cancelled", s), reply_markup=finance_kb(uid, s))
+        return FINANCE_MENU
     amount = parse_amount(text)
     if not amount:
         await update.message.reply_text(tr(uid, "bad_amount", s), reply_markup=cancel_kb(uid, s))
@@ -108,12 +107,12 @@ async def income_got_source(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     amount = ctx.user_data.pop("inc_amt", 0)
     after  = ctx.user_data.pop("after_income", None)
     add_income(uid, amount, source)
-    kb = finance_kb(uid, s) if after == "finance" else main_kb(uid, s)
     await update.message.reply_text(
         tr(uid, "income_saved", s, source=source, amount=amount, sym=sym(s)),
-        parse_mode="HTML", reply_markup=kb,
+        parse_mode="HTML", reply_markup=finance_kb(uid, s),
     )
-    return ConversationHandler.END
+    # Stay in finance menu so user can press Back naturally
+    return FINANCE_MENU
 
 
 def make_finance_conv() -> ConversationHandler:

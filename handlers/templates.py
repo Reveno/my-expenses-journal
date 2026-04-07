@@ -151,7 +151,7 @@ async def tmpl_del(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 def make_tmpl_conv() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(r"^⚡"), tmpl_start)],
+        entry_points=[MessageHandler(filters.Regex('^(⚡\\ Schnell|⚡\\ Quick|⚡\\ Быстро|⚡\\ Швидко)$'), tmpl_start)],
         states={
             TMPL_ACTION:     [MessageHandler(filters.TEXT & ~filters.COMMAND, tmpl_action)],
             TMPL_ADD_NAME:   [MessageHandler(filters.TEXT & ~filters.COMMAND, tmpl_add_name)],

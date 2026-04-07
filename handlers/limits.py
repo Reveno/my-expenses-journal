@@ -68,7 +68,7 @@ async def limit_amount(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 def make_limits_conv() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(r"^⚠️"), limit_start)],
+        entry_points=[MessageHandler(filters.Regex('^(⚠️\\ Limit\\ setzen|⚠️\\ Set\\ limit|⚠️\\ Установить\\ лимит|⚠️\\ Встановити\\ ліміт)$'), limit_start)],
         states={
             SET_LIMIT_CAT:    [MessageHandler(filters.TEXT & ~filters.COMMAND, limit_category)],
             SET_LIMIT_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, limit_amount)],
