@@ -117,11 +117,11 @@ async def income_got_source(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def make_finance_conv() -> ConversationHandler:
+    import re as _re
+    texts   = [T[l]["btn_finance"] for l in T if T[l].get("btn_finance")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(
-            filters.Regex("|".join(T[l].get("btn_finance", "") for l in T if T[l].get("btn_finance"))),
-            finance_menu
-        )],
+        entry_points=[MessageHandler(filters.Regex(pattern), finance_menu)],
         states={
             FINANCE_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, finance_action)],
             INCOME_AMT:   [MessageHandler(filters.TEXT & ~filters.COMMAND, income_got_amount)],
@@ -173,21 +173,55 @@ async def reports_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if handled:
         return REPORTS_MENU
 
-    # Excel — starts its own conversation
+    # Excel — show period selection and handle inline (can't delegate to another conv)
     if any(text == T[l].get("btn_export", "") for l in T):
-        from handlers.export import export_start
-        await export_start(update, ctx)
-        return ConversationHandler.END
+        from keyboards import export_kb
+        await update.message.reply_text(tr(uid, "export_period", s), reply_markup=export_kb(uid, s))
+        ctx.user_data["in_export"] = True
+        return REPORTS_MENU
+
+    # Handle export period if we're in inline export mode
+    if ctx.user_data.get("in_export"):
+        import io
+        from db import get_expenses, period_dates
+        from excel import build_xlsx, XLSX_OK
+        period_map = {
+            tr(uid, "export_btn_today", s): "day",
+            tr(uid, "export_btn_week",  s): "week",
+            tr(uid, "export_btn_month", s): "month",
+            tr(uid, "export_btn_all",   s): "all",
+        }
+        period = period_map.get(text)
+        if period:
+            ctx.user_data.pop("in_export", None)
+            start, end = period_dates(period)
+            rows = get_expenses(uid, start, end)
+            if not rows:
+                await update.message.reply_text(tr(uid, "export_empty", s), reply_markup=reports_kb(uid, s))
+            elif not XLSX_OK:
+                await update.message.reply_text(tr(uid, "export_no_xlsx", s), parse_mode="HTML", reply_markup=reports_kb(uid, s))
+            else:
+                await update.message.reply_text(tr(uid, "export_sending", s))
+                data = build_xlsx(uid, rows, s)
+                if data:
+                    await update.message.reply_document(
+                        document=io.BytesIO(data),
+                        filename=f"expenses_{period}.xlsx",
+                        reply_markup=reports_kb(uid, s),
+                    )
+                else:
+                    await update.message.reply_text(tr(uid, "export_no_xlsx", s), reply_markup=reports_kb(uid, s))
+            return REPORTS_MENU
 
     return REPORTS_MENU
 
 
 def make_reports_conv() -> ConversationHandler:
+    import re as _re
+    texts  = [T[l]["btn_reports"] for l in T if T[l].get("btn_reports")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(
-            filters.Regex("|".join(T[l].get("btn_reports", "") for l in T if T[l].get("btn_reports"))),
-            reports_menu
-        )],
+        entry_points=[MessageHandler(filters.Regex(pattern), reports_menu)],
         states={
             REPORTS_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, reports_action)],
         },
@@ -249,11 +283,11 @@ async def more_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def make_more_conv() -> ConversationHandler:
+    import re as _re
+    texts   = [T[l]["btn_more"] for l in T if T[l].get("btn_more")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(
-            filters.Regex("|".join(T[l].get("btn_more", "") for l in T if T[l].get("btn_more"))),
-            more_menu
-        )],
+        entry_points=[MessageHandler(filters.Regex(pattern), more_menu)],
         states={
             MORE_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, more_action)],
         },

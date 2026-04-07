@@ -77,7 +77,7 @@ async def export_do(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 def make_export_conv() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(r"^📊"), export_start)],
+        entry_points=[MessageHandler(filters.Regex('^(📊\\ Excel\\-Bericht|📊\\ Excel\\ report|📊\\ Excel\\ отчёт|📊\\ Excel\\ звіт)$'), export_start)],
         states={EXPORT_PERIOD: [MessageHandler(filters.TEXT & ~filters.COMMAND, export_do)]},
         fallbacks=[CommandHandler("cancel", lambda u, c: ConversationHandler.END)],
         allow_reentry=True,
