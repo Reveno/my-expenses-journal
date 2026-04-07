@@ -10,7 +10,7 @@ from telegram.ext import (
 )
 from config import (
     FINANCE_MENU, REPORTS_MENU, MORE_MENU,
-    INCOME_AMT, INCOME_SRC, EXPORT_PERIOD,
+    INCOME_AMT, INCOME_SRC,
 )
 from db import get_settings, add_income, get_month_income, get_month_expenses_total
 from i18n import tr, sym, month_name, T
@@ -147,6 +147,7 @@ async def reports_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = sanitize(update.message.text)
 
     if _is_back(text):
+        ctx.user_data.pop("in_export", None)
         await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
         return ConversationHandler.END
 
@@ -170,6 +171,7 @@ async def reports_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             await top_items(update, ctx, reply_markup=kb);     handled = True; break
 
     if handled:
+        ctx.user_data.pop("in_export", None)
         return REPORTS_MENU
 
     # Excel — show period selection and handle inline (can't delegate to another conv)
@@ -253,30 +255,6 @@ async def more_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             from handlers.settings import show_help
             await show_help(update, ctx)
             return MORE_MENU
-        if text == T[lang].get("btn_feedback"):
-            from handlers.feedback import feedback_start
-            await feedback_start(update, ctx)
-            return ConversationHandler.END
-        if text == T[lang].get("btn_convert"):
-            from handlers.converter import convert_start
-            await convert_start(update, ctx)
-            return ConversationHandler.END
-        if text == T[lang].get("btn_limit"):
-            from handlers.limits import limit_start
-            await limit_start(update, ctx)
-            return ConversationHandler.END
-        if text == T[lang].get("btn_recurring"):
-            from handlers.recurring import recur_start
-            await recur_start(update, ctx)
-            return ConversationHandler.END
-        if text == T[lang].get("btn_reminders"):
-            from handlers.reminders import remind_start
-            await remind_start(update, ctx)
-            return ConversationHandler.END
-        if text == T[lang].get("btn_my_cats"):
-            from handlers.categories import ccat_start
-            await ccat_start(update, ctx)
-            return ConversationHandler.END
 
     return MORE_MENU
 
@@ -285,10 +263,26 @@ def make_more_conv() -> ConversationHandler:
     import re as _re
     texts   = [T[l]["btn_more"] for l in T if T[l].get("btn_more")]
     pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
+
+    from handlers.feedback import make_feedback_conv
+    from handlers.converter import make_converter_conv
+    from handlers.limits import make_limits_conv
+    from handlers.recurring import make_recur_conv
+    from handlers.reminders import make_reminders_conv
+    from handlers.categories import make_ccat_conv
+
     return ConversationHandler(
         entry_points=[MessageHandler(filters.Regex(pattern), more_menu)],
         states={
-            MORE_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, more_action)],
+            MORE_MENU: [
+                make_feedback_conv(),
+                make_converter_conv(),
+                make_limits_conv(),
+                make_recur_conv(),
+                make_reminders_conv(),
+                make_ccat_conv(),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, more_action),
+            ],
         },
         fallbacks=[CommandHandler("start", lambda u, c: ConversationHandler.END)],
         allow_reentry=True,

@@ -138,11 +138,11 @@ async def curr_secondary(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def make_settings_conv() -> ConversationHandler:
+    import re as _re
+    texts = [T[l].get("btn_settings") for l in T if T[l].get("btn_settings")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(
-            filters.Regex("|".join(T[l].get("btn_settings", "") for l in T if T[l].get("btn_settings"))),
-            settings_start,
-        )],
+        entry_points=[MessageHandler(filters.Regex(pattern), settings_start)],
         states={
             SETTINGS_MENU:  [MessageHandler(filters.TEXT & ~filters.COMMAND, settings_menu)],
             LANG_SELECT:    [MessageHandler(filters.TEXT & ~filters.COMMAND, lang_select)],

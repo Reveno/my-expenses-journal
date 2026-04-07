@@ -7,7 +7,7 @@ from telegram.ext import (
 )
 from config import CCAT_MENU, CCAT_NAME, CCAT_DEL
 from db import get_settings, get_custom_cats, add_custom_cat, del_custom_cat
-from i18n import tr
+from i18n import tr, T
 from keyboards import main_kb, cancel_kb
 from security import is_allowed, sanitize
 from telegram import ReplyKeyboardMarkup
@@ -86,8 +86,11 @@ async def ccat_del(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def make_ccat_conv() -> ConversationHandler:
+    import re as _re
+    texts = [T[l].get("btn_my_cats") for l in T if T[l].get("btn_my_cats")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(r"^⚙️ [МMM]"), ccat_start)],
+        entry_points=[MessageHandler(filters.Regex(pattern), ccat_start)],
         states={
             CCAT_MENU: [MessageHandler(filters.TEXT & ~filters.COMMAND, ccat_menu)],
             CCAT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ccat_name)],

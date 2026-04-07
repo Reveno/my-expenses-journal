@@ -96,7 +96,16 @@ def main():
         import re
         return "^(" + "|".join(re.escape(t) for t in texts) + ")$"
 
+    async def back_to_main(update, ctx):
+        uid = update.effective_user.id
+        from db import get_settings
+        from keyboards import main_kb
+        from i18n import tr
+        s = get_settings(uid)
+        await update.message.reply_text(tr(uid, "choose_menu", s), reply_markup=main_kb(uid, s))
+
     app.add_handler(MessageHandler(filters.Regex(_pat("btn_delete")), delete_last))
+    app.add_handler(MessageHandler(filters.Regex(_pat("btn_back")), back_to_main))
 
     # ── Scheduler ─────────────────────────────────────────────────────────────
     setup_scheduler(app)

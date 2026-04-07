@@ -25,7 +25,7 @@ from db import (
     get_expenses, period_dates,
     get_limit, get_month_spent,
 )
-from i18n import tr, sym, cat_label, cat_key_from_label, detect_lang, fmt_date, month_name
+from i18n import tr, sym, cat_label, cat_key_from_label, detect_lang, fmt_date, month_name, T
 from keyboards import main_kb, cat_kb, cancel_kb, lang_kb, curr_kb
 from currency import get_rates, convert_amount, secondary_str
 from security import is_allowed, sanitize, parse_amount
@@ -117,6 +117,8 @@ def make_start_conv() -> ConversationHandler:
 # ── Donate ────────────────────────────────────────────────────────────────────
 async def cmd_donate(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
+    if not is_allowed(uid):
+        return
     s   = get_settings(uid)
     if not DONATE_URL:
         await update.message.reply_text(tr(uid, "donate_no_url", s), reply_markup=main_kb(uid, s))
@@ -210,8 +212,11 @@ async def add_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def make_add_conv() -> ConversationHandler:
+    import re as _re
+    texts = [T[l].get("btn_add") for l in T if T[l].get("btn_add")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(r"^➕"), add_start)],
+        entry_points=[MessageHandler(filters.Regex(pattern), add_start)],
         states={
             CHOOSE_CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_category)],
             ENTER_AMOUNT:    [MessageHandler(filters.TEXT & ~filters.COMMAND, add_amount)],

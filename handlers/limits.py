@@ -7,9 +7,9 @@ from telegram.ext import (
 )
 from config import SET_LIMIT_CAT, SET_LIMIT_AMOUNT
 from db import get_settings, get_limit, set_limit
-from i18n import tr, sym, cat_key_from_label
+from i18n import tr, sym, cat_key_from_label, T
 from keyboards import main_kb, cat_kb, cancel_kb
-from security import is_allowed, sanitize
+from security import is_allowed, sanitize, parse_amount
 
 
 async def limit_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -46,17 +46,17 @@ async def limit_category(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def limit_amount(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     uid   = update.effective_user.id
     s     = get_settings(uid)
-    text  = sanitize(update.message.text)
-    if text == tr(uid, "btn_cancel", s):
+    raw   = sanitize(update.message.text)
+    if raw == tr(uid, "btn_cancel", s):
         await update.message.reply_text(tr(uid, "cancelled", s), reply_markup=main_kb(uid, s))
         return ConversationHandler.END
-    try:
-        amount = float(text.replace(",", "."))
-        if amount < 0:
-            raise ValueError
-    except ValueError:
-        await update.message.reply_text(tr(uid, "bad_amount", s), reply_markup=cancel_kb(uid, s))
-        return SET_LIMIT_AMOUNT
+    if raw in ("0", "0.0", "0,0"):
+        amount = 0.0
+    else:
+        amount = parse_amount(raw)
+        if not amount:
+            await update.message.reply_text(tr(uid, "bad_amount", s), reply_markup=cancel_kb(uid, s))
+            return SET_LIMIT_AMOUNT
     cat   = ctx.user_data["lim_cat"]
     label = ctx.user_data["lim_cat_label"]
     set_limit(uid, cat, amount)
@@ -67,8 +67,11 @@ async def limit_amount(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def make_limits_conv() -> ConversationHandler:
+    import re as _re
+    texts = [T[l].get("btn_limit") for l in T if T[l].get("btn_limit")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex('^(⚠️\\ Limit\\ setzen|⚠️\\ Set\\ limit|⚠️\\ Установить\\ лимит|⚠️\\ Встановити\\ ліміт)$'), limit_start)],
+        entry_points=[MessageHandler(filters.Regex(pattern), limit_start)],
         states={
             SET_LIMIT_CAT:    [MessageHandler(filters.TEXT & ~filters.COMMAND, limit_category)],
             SET_LIMIT_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, limit_amount)],

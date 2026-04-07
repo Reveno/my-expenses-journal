@@ -64,7 +64,10 @@ class _SqliteDB:
             self._conn.commit()
         else:
             self._conn.rollback()
-        self._conn.close()
+        try:
+            self._cur.close()
+        finally:
+            self._conn.close()
 
 
 def get_db() -> _PgDB | _SqliteDB:

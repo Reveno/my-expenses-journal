@@ -7,7 +7,7 @@ from telegram.ext import (
 )
 from config import TMPL_ACTION, TMPL_ADD_NAME, TMPL_ADD_AMOUNT, TMPL_ADD_CAT, TMPL_DEL
 from db import get_settings, get_templates, add_template, del_template, add_expense, get_limit, get_month_spent
-from i18n import tr, sym, cat_label, cat_key_from_label
+from i18n import tr, sym, cat_label, cat_key_from_label, T
 from keyboards import main_kb, tmpl_kb, cat_kb, cancel_kb
 from security import is_allowed, sanitize, parse_amount
 
@@ -150,8 +150,11 @@ async def tmpl_del(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def make_tmpl_conv() -> ConversationHandler:
+    import re as _re
+    texts = [T[l].get("btn_quick") for l in T if T[l].get("btn_quick")]
+    pattern = "^(" + "|".join(_re.escape(t) for t in texts) + ")$"
     return ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex('^(⚡\\ Schnell|⚡\\ Quick|⚡\\ Быстро|⚡\\ Швидко)$'), tmpl_start)],
+        entry_points=[MessageHandler(filters.Regex(pattern), tmpl_start)],
         states={
             TMPL_ACTION:     [MessageHandler(filters.TEXT & ~filters.COMMAND, tmpl_action)],
             TMPL_ADD_NAME:   [MessageHandler(filters.TEXT & ~filters.COMMAND, tmpl_add_name)],
